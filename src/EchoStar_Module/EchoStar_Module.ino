@@ -1,8 +1,9 @@
+@author jostin
+
 #include "STM32LowPower.h"
 #include <STM32RTC.h>
 #include "es_delay.h"
 #include <SoftwareSerial.h>
-
 
 #define EchoStar_Activation PB5  //Wake_up pin activation
 
