@@ -88,7 +88,7 @@ void loop(void) {
 
   digitalWrite(EchoStarActivation, LOW);  //Put the the module EchoStar on sleep
 
-  switch (sx126x.relay(&relay_lora_params, payload, payload_len, NULL, /*NULL*/sleepRelay)) {
+  switch (sx126x.relay(&relay_lora_params, payload, payload_len, NULL, /*NULL*/ sleepRelay)) {
     case RFT_STATUS_OK:
       if (payload_len > 0) {
         //Serial.begin(115200);
@@ -108,42 +108,51 @@ void loop(void) {
 
         Serial.println("Received");
 
+        int a = 1;
         //What i am going to add
-        while (!Serial3.available()) {
+        while (a == 1 /*!Serial3.available()*/) {
+          while (!Serial3.available())
+            ;
+          int lecture = Serial3.read();
+
           int sortir = 1;
           Serial.println("Waiting acknowledgment");
+          digitalWrite(LED_BUILTIN, HIGH);
 
-          while (Serial3.available()) {
+          /*digitalWrite(LED_BUILTIN, HIGH);
+          delay(125);
+          digitalWrite(LED_BUILTIN, LOW);
+          delay(50);
+          digitalWrite(LED_BUILTIN, HIGH);
+          delay(125);
+          digitalWrite(LED_BUILTIN, LOW);*/
+
+          // while (Serial3.available()) {
+          // int lecture = Serial3.read();
+          while (lecture == 1) {  //1 for NAK
+            lecture = Serial3.read();
+            Serial3.write(hexPayload);
             sortir = 2;
-
-
-            int lecture = Serial3.read();
-            if (lecture == 1) {  //1 for NAK
-              Serial3.write(hexPayload);
-            } else if (lecture == 2) {  //2 for ACK
-              Serial.println("Received acknowledgment");
-              digitalWrite(LED_BUILTIN, HIGH);
-              delay(125);
-              digitalWrite(LED_BUILTIN, LOW);
-              delay(50);
-              digitalWrite(LED_BUILTIN, HIGH);
-              delay(125);
-              digitalWrite(LED_BUILTIN, LOW);
-            }
           }
+          if (lecture == 2) {  //2 for ACK
+            sortir = 2;
+            digitalWrite(LED_BUILTIN, LOW);
+            Serial.println("Received acknowledgment");
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(125);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(50);
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(125);
+            digitalWrite(LED_BUILTIN, LOW);
+          }
+          // }
 
           if (sortir == 2) {
             break;
           }
         }
 
-        /*digitalWrite(LED_BUILTIN, HIGH);
-        delay(125);
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(50);
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(125);
-        digitalWrite(LED_BUILTIN, LOW);*/
 
         delay(1000);
       } else {
