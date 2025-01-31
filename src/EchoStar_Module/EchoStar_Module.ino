@@ -1,3 +1,7 @@
+/**
+ * @author jostin, mtnguyen
+ */
+
 #include "STM32LowPower.h"
 #include <STM32RTC.h>
 #include "es_delay.h"
@@ -17,6 +21,13 @@ uint8_t buffer_len = 0;
 
 void setup(void) {
   // put your setup code here, to run once:
+  pinMode(GNSS_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(GNSS_PWR_ENABLE_PIN, LOW);
+
+  pinMode(SENSORS_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(SENSORS_PWR_ENABLE_PIN, LOW);
+
+
   DELAY_MANAGER.init();
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -61,11 +72,11 @@ void loop(void) {
 
   USB_SERIAL.println("0");
   digitalWrite(LED_BUILTIN, LOW);
-  EM2050_soft_sleep_enable();
-  DELAY_MANAGER.delay_ms(60000);
   EM2050_soft_sleep_disable();
-  digitalWrite(LED_BUILTIN, HIGH);
-
+  DELAY_MANAGER.delay_ms(60000);
+  //EM2050_soft_sleep_enable();
+ 
+  delay(2000);
 
   char command_packet[150];
   memset(command_packet, 0, 150);
@@ -79,6 +90,7 @@ void loop(void) {
 
     if (buffer_len == 38) {
       acknowledgment = 2;  //the paquet is complete
+       digitalWrite(LED_BUILTIN, HIGH);
 
       char packet[50];
       int packet_len = 0;
