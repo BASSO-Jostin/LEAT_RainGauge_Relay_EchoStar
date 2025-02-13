@@ -100,7 +100,7 @@ void loop(void) {
 
         memset(hexPayload, 0, 50);
         for (int i = 0; i < 19; i++) {
-          sprintf(&hexPayload[2 * i], "%02X", payload[i]);  // Convert every by to hex
+          sprintf(&hexPayload[2 * i], "%02X", payload[i]);  // Convert every byte to hex
         }
 
         //The forward to the EchoStar module by using the serial mode
@@ -130,8 +130,9 @@ void loop(void) {
           // while (Serial3.available()) {
           // int lecture = Serial3.read();
           while (lecture == 1) {  //1 for NAK
-            lecture = Serial3.read();
             Serial3.write(hexPayload);
+            delay(1000);
+            lecture = Serial3.read();
             sortir = 2;
           }
           if (lecture == 2) {  //2 for ACK
