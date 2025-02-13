@@ -1,14 +1,10 @@
-
-/**
- * @author jostin, mtnguyen
- */
-
-
-
 #include "STM32LowPower.h"
 #include <STM32RTC.h>
 #include "es_delay.h"
 #include <SoftwareSerial.h>
+#include "Project_configuration.h"
+#include "es_watchdog.h"
+
 
 #define EchoStar_Activation PB5  //Wake_up pin activation
 
@@ -20,6 +16,8 @@ volatile int switch_reversing_control = SWITCH_REVERSING_CONTROL_DEFAULT_VALUE;
 char buffer[255];
 uint8_t buffer_len = 0;
 
+uint16_t framecounter_uplink;
+uint16_t frame_Problem; 
 
 void setup(void) {
   // put your setup code here, to run once:
@@ -68,6 +66,17 @@ void setup(void) {
   digitalWrite(LED_BUILTIN, LOW);
   //EM2050_soft_sleep_enable(); //go to sleep mode
   delay(500);
+
+  WATCHDOG.init();
+  if (WATCHDOG.isResetByWatchdog()) {
+    USB_SERIAL.println("[ERROR] main::setup() | The reset was caused by WATCHDOG timeout");
+  }
+
+  analogReadResolution(12);
+
+  framecounter_uplink=0;
+
+  frame_Problem=0; //Not complete paquet received 
 }
 
 void loop(void) {
@@ -76,8 +85,9 @@ void loop(void) {
   digitalWrite(LED_BUILTIN, LOW);
   EM2050_soft_sleep_disable();
   DELAY_MANAGER.delay_ms(60000);
+  uint16_t bat = read_bat();
   //EM2050_soft_sleep_enable();
- 
+
   delay(2000);
 
   char command_packet[150];
@@ -92,10 +102,11 @@ void loop(void) {
 
     if (buffer_len == 38) {
       acknowledgment = 2;  //the paquet is complete
-       digitalWrite(LED_BUILTIN, HIGH);
+      digitalWrite(LED_BUILTIN, HIGH);
 
       char packet[50];
       int packet_len = 0;
+      //char hexBat[10];
 
       //To save dev_Addr in packet
       packet[packet_len++] = buffer[8];
@@ -111,6 +122,39 @@ void loop(void) {
       for (int i = 18; i < 30; i++) {
         packet[packet_len++] = buffer[i];
       }
+
+      char hexFrameCounter[5]; 
+      memset(hexFrameCounter, 0, 5);
+
+      snprintf(hexFrameCounter, sizeof(hexFrameCounter), "%04X", framecounter_uplink);
+      //To save EchoStar FrameCounter in packet
+      packet[packet_len++] = hexFrameCounter[0];
+      packet[packet_len++] = hexFrameCounter[1];
+      packet[packet_len++] = hexFrameCounter[2];
+      packet[packet_len++] = hexFrameCounter[3];
+
+      char hexBat[5]; 
+      memset(hexBat, 0, 5);
+
+      snprintf(hexBat, sizeof(hexBat), "%04X", bat);
+
+      USB_SERIAL.println(bat, HEX);
+
+      //To save data Battery Data in packet
+      packet[packet_len++] = hexBat[0];
+      packet[packet_len++] = hexBat[1];
+      packet[packet_len++] = hexBat[2];
+      packet[packet_len++] = hexBat[3];
+
+      char hexFrameProblem[5]; 
+      memset(hexFrameProblem, 0, 5);
+
+      snprintf(hexFrameProblem, sizeof(hexFrameProblem), "%04X", frame_Problem);
+      //To save EchoStar Frame Problem in packet
+      packet[packet_len++] = hexFrameProblem[0];
+      packet[packet_len++] = hexFrameProblem[1];
+      packet[packet_len++] = hexFrameProblem[2];
+      packet[packet_len++] = hexFrameProblem[3];
 
       // Buffer for AT command in char
       char command[150];
@@ -128,6 +172,8 @@ void loop(void) {
       ECHOSTAR_SERIAL.println(command_packet);
       buffer_len = 0;  //Reset the counter after sending
 
+      framecounter_uplink +=1;
+
 
       delay(500);
     }
@@ -136,15 +182,17 @@ void loop(void) {
   if (acknowledgment == 1) {
     Serial2.write(1);  //1 for NAK
     USB_SERIAL.println("I am 1 ");
-    acknowledgment=0;
-  } 
-  else if (acknowledgment == 2) {
+    frame_Problem +=1;
+    acknowledgment = 0;
+  } else if (acknowledgment == 2) {
     Serial2.write(2);  //2 for ACK
     USB_SERIAL.println("I am 2 ");
-    acknowledgment=0;
+    acknowledgment = 0;
   }
 
   delay(1000);
+
+  WATCHDOG.reload();
 }
 
 
@@ -198,4 +246,11 @@ void Interruption_delay() {
 }*/
 
 void button_1_isr(void) {
+}
+
+uint16_t read_bat(void) {
+  // uint16_t voltage_adc = (uint16_t)analogRead(SENSORS_BATERY_ADC_PIN);
+  uint16_t voltage_adc = (uint16_t)analogRead(PB1);
+  uint16_t voltage = (uint16_t)((ADC_AREF / 4.096) * (BATVOLT_R1 + BATVOLT_R2) / BATVOLT_R2 * (float)voltage_adc);
+  return voltage;
 }
