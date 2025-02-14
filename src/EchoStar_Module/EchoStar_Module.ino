@@ -5,6 +5,7 @@
 #include "Project_configuration.h"
 #include "es_delay.h"
 #include "es_watchdog.h"
+#include "es_log.h"
 
 
 
@@ -53,11 +54,7 @@ void setup(void)
 
   attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
 
-  USB_SERIAL.begin(115200);
-  while (!USB_SERIAL)
-    ;
-
-  USB_SERIAL.println("Starting...");
+  LOG.init();
 
   ECHOSTAR_SERIAL.begin(115200);
 
@@ -74,7 +71,7 @@ void setup(void)
   WATCHDOG.init();
   if (WATCHDOG.isResetByWatchdog())
   {
-    USB_SERIAL.println("[ERROR] main::setup() | The reset was caused by WATCHDOG timeout");
+    LOG.println("[ERROR] main::setup() | The reset was caused by WATCHDOG timeout");
   }
 
   analogReadResolution(12);
@@ -87,7 +84,7 @@ void setup(void)
 void loop(void)
 {
 
-  USB_SERIAL.println("0");
+  LOG.println("0");
   digitalWrite(LED_BUILTIN, LOW);
   EM2050_soft_sleep_disable();
   DELAY_MANAGER.delay_ms(60000);
@@ -105,7 +102,7 @@ void loop(void)
     acknowledgment = 1; // When data is received but the paquet is not complete
     buffer[buffer_len++] = Serial2.read();
     // To see what is received
-    USB_SERIAL.println(buffer_len);
+    LOG.println(buffer_len);
 
     if (buffer_len == 38)
     {
@@ -146,8 +143,7 @@ void loop(void)
       memset(hexBat, 0, 5);
 
       snprintf(hexBat, sizeof(hexBat), "%04X", bat);
-
-      USB_SERIAL.println(bat, HEX);
+      LOG.println(hexBat);
 
       // To save data Battery Data in packet
       packet[packet_len++] = hexBat[0];
@@ -169,13 +165,13 @@ void loop(void)
       char command[150];
 
       sprintf(command, "AT+SEND=1,0,8,0,%s\r\n", buffer);
-      USB_SERIAL.println("To see what is in the buffer ");
-      USB_SERIAL.println(command);
+      LOG.println("To see what is in the buffer ");
+      LOG.println(command);
       delay(100);
 
       sprintf(command_packet, "AT+SEND=1,0,8,0,%s\r\n", packet);
-      USB_SERIAL.println("To see what is sent ");
-      USB_SERIAL.println(command_packet);
+      LOG.println("To see what is sent ");
+      LOG.println(command_packet);
 
       // Sending packet with AT + SEND command to the satellite
       ECHOSTAR_SERIAL.println(command_packet);
@@ -190,14 +186,14 @@ void loop(void)
   if (acknowledgment == 1)
   {
     Serial2.write(1); // 1 for NAK
-    USB_SERIAL.println("I am 1 ");
+    LOG.println("I am 1 ");
     frame_Problem += 1;
     acknowledgment = 0;
   }
   else if (acknowledgment == 2)
   {
     Serial2.write(2); // 2 for ACK
-    USB_SERIAL.println("I am 2 ");
+    LOG.println("I am 2 ");
     acknowledgment = 0;
   }
 
