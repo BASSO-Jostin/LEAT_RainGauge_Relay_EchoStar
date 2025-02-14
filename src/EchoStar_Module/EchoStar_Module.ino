@@ -10,8 +10,9 @@
 
 int acknowledgment = 0;
 
-#define SWITCH_REVERSING_CONTROL_DEFAULT_VALUE true
-volatile int switch_reversing_control = SWITCH_REVERSING_CONTROL_DEFAULT_VALUE;
+/* No need on version 7.1 & later */
+// #define SWITCH_REVERSING_CONTROL_DEFAULT_VALUE true
+// volatile int switch_reversing_control = SWITCH_REVERSING_CONTROL_DEFAULT_VALUE;
 
 char buffer[255];
 uint8_t buffer_len = 0;
@@ -43,8 +44,12 @@ void setup(void) {
   pinMode(DPDT_CTRL_PIN, OUTPUT);
   digitalWrite(DPDT_CTRL_PIN, HIGH);
 
+  /* No need on version 7.1 & later */
+  /*
   pinMode(ECHOSTAR_SWCTRL_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ECHOSTAR_SWCTRL_PIN), swctrl_change_isr, CHANGE);
+  */
+
   attachInterrupt(digitalPinToInterrupt(EchoStar_Activation), button_1_isr, RISING);
 
   USB_SERIAL.begin(115200);
@@ -53,7 +58,8 @@ void setup(void) {
 
   USB_SERIAL.println("Starting...");
 
-  do_switch_ctrl_update();
+  /* No need on version 7.1 & later */
+  // do_switch_ctrl_update();
 
   ECHOSTAR_SERIAL.begin(115200);
 
@@ -195,7 +201,8 @@ void loop(void) {
   WATCHDOG.reload();
 }
 
-
+/* No need on version 7.1 & later */
+/*
 void swctrl_change_isr(void) {
 
   do_switch_ctrl_update();
@@ -222,7 +229,7 @@ void sleepEchoStar(int sleeping_time_ms) {
     EM2050_soft_sleep_disable();
   }
 }
-
+*/
 
 void EM2050_soft_sleep_enable(void) {
   pinMode(ECHOSTAR_RTS_PIN, OUTPUT);
