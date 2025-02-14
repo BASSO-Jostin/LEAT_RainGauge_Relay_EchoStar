@@ -7,13 +7,10 @@
 #include "es_watchdog.h"
 #include "es_log.h"
 
-
-
 /* ============================== MACRO ============================== */
 
+#define RELAY_SERIAL HEADER_SERIAL
 #define RELAY_DATA_AVAILABLE_PIN PB5 // Wake_up pin activation
-
-
 
 /* ============================== GLOBAL VARIABLES ============================== */
 
@@ -25,47 +22,30 @@ uint8_t buffer_len = 0;
 uint16_t framecounter_uplink;
 uint16_t frame_Problem;
 
-
-
 /* ============================== MAIN ============================== */
 void setup(void)
 {
-  // put your setup code here, to run once:
-  pinMode(GNSS_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(GNSS_PWR_ENABLE_PIN, LOW);
-
-  pinMode(SENSORS_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(SENSORS_PWR_ENABLE_PIN, LOW);
-
+  // Initialize es_delay library
   DELAY_MANAGER.init();
-  pinMode(LED_BUILTIN, OUTPUT);
 
-#if defined(ECHOSTAR_PWR_ENABLE_PIN)
-  pinMode(ECHOSTAR_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, HIGH);
-#endif
+  // Initialize all STM32U5 GPIOs like LED, LDO controls, etc.
+  gpio_init();
 
-#if defined(DPDT_PWR_ENABLE_PIN)
-  pinMode(DPDT_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(DPDT_PWR_ENABLE_PIN, HIGH);
-#endif
-  pinMode(DPDT_CTRL_PIN, OUTPUT);
-  digitalWrite(DPDT_CTRL_PIN, HIGH);
-
-  attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
-
+  // Initialize es_log library
   LOG.init();
+
+  // Set ADC read resolution to 12 bits
+  analogReadResolution(12);
 
   ECHOSTAR_SERIAL.begin(115200);
 
-  // Initialize the serial mode
-  Serial2.begin(115200);
+  // Initialize the serial for relay
+  RELAY_SERIAL.begin(115200);
 
   // AT JOIN command in order to be connected to the satellite
   ECHOSTAR_SERIAL.write("AT+JOIN\r\n");
 
   digitalWrite(LED_BUILTIN, LOW);
-  // EM2050_soft_sleep_enable(); //go to sleep mode
   delay(500);
 
   WATCHDOG.init();
@@ -74,20 +54,15 @@ void setup(void)
     LOG.println("[ERROR] main::setup() | The reset was caused by WATCHDOG timeout");
   }
 
-  analogReadResolution(12);
-
   framecounter_uplink = 0;
-
   frame_Problem = 0; // Not complete paquet received
 }
 
 void loop(void)
 {
-
-  LOG.println("0");
-  digitalWrite(LED_BUILTIN, LOW);
   EM2050_soft_sleep_disable();
-  DELAY_MANAGER.delay_ms(60000);
+  DELAY_MANAGER.delay_ms(60000); // Delay / Sleep for 60s
+
   uint16_t bat = read_bat();
   // EM2050_soft_sleep_enable();
 
@@ -96,11 +71,11 @@ void loop(void)
   char command_packet[150];
   memset(command_packet, 0, 150);
 
-  // When Serial2 receives data from the relay
-  while (Serial2.available())
+  // When RELAY_SERIAL receives data from the relay
+  while (RELAY_SERIAL.available())
   {
     acknowledgment = 1; // When data is received but the paquet is not complete
-    buffer[buffer_len++] = Serial2.read();
+    buffer[buffer_len++] = RELAY_SERIAL.read();
     // To see what is received
     LOG.println(buffer_len);
 
@@ -185,14 +160,14 @@ void loop(void)
 
   if (acknowledgment == 1)
   {
-    Serial2.write(1); // 1 for NAK
+    RELAY_SERIAL.write(1); // 1 for NAK
     LOG.println("I am 1 ");
     frame_Problem += 1;
     acknowledgment = 0;
   }
   else if (acknowledgment == 2)
   {
-    Serial2.write(2); // 2 for ACK
+    RELAY_SERIAL.write(2); // 2 for ACK
     LOG.println("I am 2 ");
     acknowledgment = 0;
   }
@@ -202,9 +177,34 @@ void loop(void)
   WATCHDOG.reload();
 }
 
-
-
 /* ============================== OTHER FUNCTIONS ============================== */
+
+void gpio_init(void)
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // put your setup code here, to run once:
+  pinMode(GNSS_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(GNSS_PWR_ENABLE_PIN, LOW);
+
+  pinMode(SENSORS_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(SENSORS_PWR_ENABLE_PIN, LOW);
+
+
+#if defined(ECHOSTAR_PWR_ENABLE_PIN)
+  pinMode(ECHOSTAR_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, HIGH);
+#endif
+
+#if defined(DPDT_PWR_ENABLE_PIN)
+  pinMode(DPDT_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(DPDT_PWR_ENABLE_PIN, HIGH);
+#endif
+  pinMode(DPDT_CTRL_PIN, OUTPUT);
+  digitalWrite(DPDT_CTRL_PIN, HIGH);
+
+  attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
+}
 
 void EM2050_soft_sleep_enable(void)
 {
@@ -226,8 +226,6 @@ uint16_t read_bat(void)
   uint16_t voltage = (uint16_t)((ADC_AREF / 4.096) * (BATVOLT_R1 + BATVOLT_R2) / BATVOLT_R2 * (float)voltage_adc);
   return voltage;
 }
-
-
 
 /* ============================== INTERRUPTS ============================== */
 
