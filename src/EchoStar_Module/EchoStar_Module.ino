@@ -47,11 +47,11 @@ void setup(void) {
   attachInterrupt(digitalPinToInterrupt(ECHOSTAR_SWCTRL_PIN), swctrl_change_isr, CHANGE);
   attachInterrupt(digitalPinToInterrupt(EchoStar_Activation), button_1_isr, RISING);
 
-  //USB_SERIAL.begin(115200);
-  /*while (!USB_SERIAL)
-    ;*/
+  USB_SERIAL.begin(115200);
+  while (!USB_SERIAL)
+    ;
 
-  //USB_SERIAL.println("Starting...");
+  USB_SERIAL.println("Starting...");
 
   do_switch_ctrl_update();
 
@@ -98,7 +98,7 @@ void loop(void) {
     acknowledgment = 1;  //When data is received but the paquet is not complete
     buffer[buffer_len++] = Serial2.read();
     //To see what is received
-    //USB_SERIAL.println(buffer_len);
+    USB_SERIAL.println(buffer_len);
 
     if (buffer_len == 38) {
       acknowledgment = 2;  //the paquet is complete
@@ -233,11 +233,6 @@ void EM2050_soft_sleep_enable(void) {
 void EM2050_soft_sleep_disable(void) {
   pinMode(ECHOSTAR_RTS_PIN, INPUT);
   delay(50);
-}
-
-void Interruption_delay() {
-
-  //USB_SERIAL.println("Je suis ici");
 }
 
 /*void mcu_sleep(uint32_t sleep_duration_s) {
