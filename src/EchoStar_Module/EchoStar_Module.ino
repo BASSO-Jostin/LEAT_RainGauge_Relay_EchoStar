@@ -1,14 +1,18 @@
 /* ============================== LIBRARIES ============================== */
-#include "STM32LowPower.h"
+#include <STM32LowPower.h>
 #include <STM32RTC.h>
-#include "es_delay.h"
-#include <SoftwareSerial.h>
+
 #include "Project_configuration.h"
+#include "es_delay.h"
 #include "es_watchdog.h"
+
+
 
 /* ============================== MACRO ============================== */
 
-#define EchoStar_Activation PB5 // Wake_up pin activation
+#define RELAY_DATA_AVAILABLE_PIN PB5 // Wake_up pin activation
+
+
 
 /* ============================== GLOBAL VARIABLES ============================== */
 
@@ -19,6 +23,8 @@ uint8_t buffer_len = 0;
 
 uint16_t framecounter_uplink;
 uint16_t frame_Problem;
+
+
 
 /* ============================== MAIN ============================== */
 void setup(void)
@@ -45,7 +51,7 @@ void setup(void)
   pinMode(DPDT_CTRL_PIN, OUTPUT);
   digitalWrite(DPDT_CTRL_PIN, HIGH);
 
-  attachInterrupt(digitalPinToInterrupt(EchoStar_Activation), relay_data_available_io_usr, RISING);
+  attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
 
   USB_SERIAL.begin(115200);
   while (!USB_SERIAL)
@@ -200,6 +206,8 @@ void loop(void)
   WATCHDOG.reload();
 }
 
+
+
 /* ============================== OTHER FUNCTIONS ============================== */
 
 void EM2050_soft_sleep_enable(void)
@@ -222,6 +230,8 @@ uint16_t read_bat(void)
   uint16_t voltage = (uint16_t)((ADC_AREF / 4.096) * (BATVOLT_R1 + BATVOLT_R2) / BATVOLT_R2 * (float)voltage_adc);
   return voltage;
 }
+
+
 
 /* ============================== INTERRUPTS ============================== */
 
