@@ -201,7 +201,7 @@ void loop(void)
   // Send status packet every 30 mins
   if (now_timestamp >= send_status_timestamp)
   {
-    send_status_timestamp += (30 * 60 * 1000); // Schedule the next status uplink
+    send_status_timestamp = now_timestamp + (30 * 60 * 1000); // Schedule the next status uplink
     send_status_packet();
   }
   else if (send_status_timestamp - now_timestamp > (24 * 60 * 60 * 1000)) // If millis() is overflown, reset everything

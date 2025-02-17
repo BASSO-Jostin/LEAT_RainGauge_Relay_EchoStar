@@ -4,6 +4,8 @@
 
 #if defined(USING_LOG)
 
+// TODO: Implement the SD Card logging feature
+
 es_log::es_log()
 {
 }

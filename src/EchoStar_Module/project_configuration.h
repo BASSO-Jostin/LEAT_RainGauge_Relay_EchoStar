@@ -12,6 +12,20 @@
  */
  // #define USING_LOG
 
+/**
+ * Uncomment this line to enable WATCHDOG feature
+ */
+#define USING_WATCHDOG
+
+/**
+ * This is the maximum time to call a reload for watchdog.
+ * If no reload called in WATCHDOG_TIMEOUT_S seconds, a reset will be trigger.
+ *
+ * Unit: Seconds
+ * Max value: 32
+ */
+#define WATCHDOG_TIMEOUT_S 30
+
 /*************************************************************/
 
 /* ----------------------------------------------------- */
