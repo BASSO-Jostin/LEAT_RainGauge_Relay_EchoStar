@@ -204,10 +204,10 @@ void loop(void)
     send_status_timestamp = now_timestamp + (30 * 60 * 1000); // Schedule the next status uplink
     send_status_packet();
   }
-  else if (send_status_timestamp - now_timestamp > (24 * 60 * 60 * 1000)) // If millis() is overflown, reset everything
-  {
-    send_status_timestamp = 0;
-  }
+  // else if (send_status_timestamp - now_timestamp > (24 * 60 * 60 * 1000)) // If millis() is overflown, reset everything
+  // {
+  //   send_status_timestamp = 0;
+  // }
 
   // Reload WATCHDOG
   WATCHDOG.reload();
@@ -267,7 +267,7 @@ void echostar_init(void)
 void send_status_packet(void)
 {
   // TODO: Compose an actual status packet! It should included data like: Battery voltage, temperature, humidity, counters, etc.
-  ECHOSTAR_SERIAL.println("AT+SEND=1,0,9,0,THIS IS TEST DATA");
+  ECHOSTAR_SERIAL.println("AT+SEND=1,0,9,0,THIS\r\n");
 }
 
 void EM2050_soft_sleep_enable(void)
