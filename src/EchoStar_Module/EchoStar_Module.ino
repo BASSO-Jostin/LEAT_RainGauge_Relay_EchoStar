@@ -6,7 +6,7 @@
 
 /* ============================== MACRO ============================== */
 
-#define RELAY_SERIAL HEADER_SERIAL
+#define RELAY_SERIAL Serial2
 #define RELAY_DATA_AVAILABLE_PIN PB5 // Wake_up pin activation
 
 /* ============================== GLOBAL VARIABLES ============================== */
@@ -20,6 +20,8 @@ uint16_t framecounter_uplink;
 uint16_t frame_Problem;
 
 uint32_t send_status_timestamp = 0;
+
+bool relay_data_available_flag = false;
 
 /* ============================== MAIN ============================== */
 void setup(void)
@@ -36,7 +38,7 @@ void setup(void)
   // Set ADC read resolution to 12 bits
   analogReadResolution(12);
 
-  ECHOSTAR_SERIAL.begin(115200);
+  echostar_init();
 
   // Initialize the serial for relay
   RELAY_SERIAL.begin(115200);
@@ -44,8 +46,8 @@ void setup(void)
   // AT JOIN command in order to be connected to the satellite
   ECHOSTAR_SERIAL.write("AT+JOIN\r\n");
 
+  delay(2000);
   digitalWrite(LED_BUILTIN, LOW);
-  delay(500);
 
   WATCHDOG.init();
   if (WATCHDOG.isResetByWatchdog())
@@ -55,8 +57,9 @@ void setup(void)
   EM2050_soft_sleep_disable();
 
   framecounter_uplink = 0;
-  frame_Problem = 0; // Not complete paquet received
-  send_status_timestamp = 0;
+  frame_Problem = 0;                                  // Not complete paquet received
+  send_status_timestamp = millis() + (5 * 60 * 1000); // After 5 mins
+  relay_data_available_flag = false;
 }
 
 #if 0 // Main version of JOSTIN
@@ -184,8 +187,14 @@ void loop(void)
   uint32_t now_timestamp = millis();
 
   // Check if RELAY DATA is available? Send to satellite immidiately if yes.
-  if (RELAY_SERIAL.available())
+  if (relay_data_available_flag)
   {
+    relay_data_available_flag = false;
+
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1500);
+    digitalWrite(LED_BUILTIN, LOW);
+
     read_data_from_relay();
   }
 
@@ -235,6 +244,8 @@ void gpio_init(void)
 
 #if defined(ECHOSTAR_PWR_ENABLE_PIN)
   pinMode(ECHOSTAR_PWR_ENABLE_PIN, OUTPUT);
+  digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, LOW);
+  delay(500);
   digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, HIGH);
 #endif
 
@@ -246,6 +257,11 @@ void gpio_init(void)
   digitalWrite(DPDT_CTRL_PIN, HIGH);
 
   attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
+}
+
+void echostar_init(void)
+{
+  ECHOSTAR_SERIAL.begin(115200);
 }
 
 void send_status_packet(void)
@@ -390,6 +406,7 @@ void read_data_from_relay(void)
 void relay_data_available_io_usr(void)
 {
   // INFO: This function is for waking-up the MCU only. No need to do anything here.
+  relay_data_available_flag = true;
 }
 
 /* ============================== END ============================== */
