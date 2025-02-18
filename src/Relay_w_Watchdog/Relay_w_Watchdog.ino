@@ -20,6 +20,7 @@
   http://www.arduino.cc/en/Tutorial/Button
 */
 
+#include "custom_pin_map.h"
 #include <IWatchdog.h>
 
 const int buttonPin = PC5;
