@@ -23,18 +23,24 @@
 #include "custom_pin_map.h"
 #include <IWatchdog.h>
 
-const int buttonPin = PC5;
-const int ledPin = PC8;
+const int buttonPin = LS_USER_BUTTON;
+const int ledPin = LS_LED;
 
 static int default_buttonState = LOW;
 
-void setup() {
+void setup(void)
+{
   pinMode(ledPin, OUTPUT);
   pinMode(buttonPin, INPUT);
 
-  if (IWatchdog.isReset(true)) {
+  // Header Serial to commincate with EchoStar
+  init_header_serial();
+
+  if (IWatchdog.isReset(true))
+  {
     // LED blinks to indicate reset
-    for (uint8_t idx = 0; idx < 5; idx++) {
+    for (uint8_t idx = 0; idx < 5; idx++)
+    {
       digitalWrite(ledPin, HIGH);
       delay(100);
       digitalWrite(ledPin, LOW);
@@ -50,9 +56,11 @@ void setup() {
   // or with a 2 seconds window
   // IWatchdog.begin(10000000, 2000000);
 
-  if (!IWatchdog.isEnabled()) {
+  if (!IWatchdog.isEnabled())
+  {
     // LED blinks indefinitely
-    while (1) {
+    while (1)
+    {
       digitalWrite(ledPin, HIGH);
       delay(500);
       digitalWrite(ledPin, LOW);
@@ -61,17 +69,28 @@ void setup() {
   }
 }
 
-void loop() {
+void loop(void)
+{
   // Compare current button state of the pushbutton value:
-  if (digitalRead(buttonPin) == default_buttonState) {
+  if (digitalRead(buttonPin) == default_buttonState)
+  {
     digitalWrite(ledPin, LOW);
-  } else {
+  }
+  else
+  {
     digitalWrite(ledPin, HIGH);
 
     // Uncomment to change timeout value to 6 seconds
-    //IWatchdog.set(6000000);
+    // IWatchdog.set(6000000);
 
-	// Reload the watchdog only when the button is pressed
+    // Reload the watchdog only when the button is pressed
     IWatchdog.reload();
   }
+}
+
+void init_header_serial(void)
+{
+  HEADER_SERIAL.setTx(HEADER_SERIAL_TX_PIN);
+  HEADER_SERIAL.setRx(HEADER_SERIAL_RX_PIN);
+  HEADER_SERIAL.begin(115200);
 }
