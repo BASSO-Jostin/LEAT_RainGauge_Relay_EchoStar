@@ -8,9 +8,9 @@
 
 /**
  * Uncomment this define to enable LOG functions to show on the USB Serial console.
- * Note: If USING_LOG & USING_SLEEP_MODE are available at the same time, USB Serial Console may be malfunctioned after the first MCU sleep.
+ * Note: If USING_LOG_USB_SERIAL & USING_SLEEP_MODE are available at the same time, USB Serial Console may be malfunctioned after the first MCU sleep.
  */
- // #define USING_LOG
+ #define USING_LOG_USB_SERIAL
 
 /**
  * Uncomment this line to enable WATCHDOG feature
