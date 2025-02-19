@@ -34,6 +34,8 @@ void setup(void)
 
   // Initialize es_log library
   LOG.init();
+  LOG.print("[INFO] main::setup() | System restarted at ");
+  LOG.println((unsigned int)millis());
 
   // Set ADC read resolution to 12 bits
   analogReadResolution(12);
@@ -52,7 +54,11 @@ void setup(void)
   WATCHDOG.init();
   if (WATCHDOG.isResetByWatchdog())
   {
-    LOG.println("[ERROR] main::setup() | The reset was caused by WATCHDOG timeout");
+    LOG.println("[WARNING] main::setup() | The reset was caused by WATCHDOG timeout");
+  }
+  else
+  {
+    LOG.println("[INFO] main::setup() | The reset was caused by External Reset");
   }
   EM2050_soft_sleep_disable();
 
@@ -60,6 +66,8 @@ void setup(void)
   frame_Problem = 0;                                  // Not complete paquet received
   send_status_timestamp = millis() + (5 * 60 * 1000); // After 5 mins
   relay_data_available_flag = false;
+
+  LOG.println("[INFO] main::setup() | Initialization DONE, jumping to main loop");
 }
 
 #if 0 // Main version of JOSTIN
@@ -185,6 +193,8 @@ void loop(void)
 void loop(void)
 {
   uint32_t now_timestamp = millis();
+  LOG.print("[INFO] main::loop() | Device wakeup, now_timestamp = ");
+  LOG.println((unsigned int)now_timestamp);
 
   // Check if RELAY DATA is available? Send to satellite immidiately if yes.
   if (relay_data_available_flag)
@@ -195,6 +205,8 @@ void loop(void)
     delay(1500);
     digitalWrite(LED_BUILTIN, LOW);
 
+    LOG.println("[INFO] main::loop() | Relay data is available");
+
     read_data_from_relay();
   }
 
@@ -202,14 +214,26 @@ void loop(void)
   if (now_timestamp >= send_status_timestamp)
   {
     send_status_timestamp = now_timestamp + (30 * 60 * 1000); // Schedule the next status uplink
+
+    LOG.print("[INFO] main::loop() | Sending status packet, next status packet is scheduled at ");
+    LOG.println((unsigned int)send_status_timestamp);
+
     send_status_packet();
   }
   // else if (send_status_timestamp - now_timestamp > (24 * 60 * 60 * 1000)) // If millis() is overflown, reset everything
   // {
   //   send_status_timestamp = 0;
   // }
+  else
+  {
+    LOG.print("[INFO] main::loop() | Sending status packet timeout is not due. now_timestamp = ");
+    LOG.print((unsigned int)now_timestamp);
+    LOG.print("; send_status_timestamp = ");
+    LOG.println((unsigned int)send_status_timestamp);
+  }
 
   // Reload WATCHDOG
+  LOG.println("[INFO] main::loop() | Reloading Watchdog");
   WATCHDOG.reload();
 
   // Blink LED twice
@@ -223,6 +247,7 @@ void loop(void)
 
   // Go to sleep for 10 senconds
   // EM2050_soft_sleep_enable(); // TODO: Test if we can save more power with this
+  LOG.println("[INFO] main::loop() | Go to sleep for 10 seconds");
   DELAY_MANAGER.delay_ms(10 * 1000);
   EM2050_soft_sleep_disable();
 }
