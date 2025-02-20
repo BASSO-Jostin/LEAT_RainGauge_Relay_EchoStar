@@ -193,8 +193,13 @@ void loop(void)
 void loop(void)
 {
   uint32_t now_timestamp = millis();
+
   LOG.print("[INFO] main::loop() | Device wakeup, now_timestamp = ");
   LOG.println((unsigned int)now_timestamp);
+
+  
+  LOG.print("[INFO] main::loop() | Device wakeup, Current RTC Epoch = ");
+  LOG.println((unsigned int)DELAY_MANAGER.get_current_epoch_time());
 
   // Check if RELAY DATA is available? Send to satellite immidiately if yes.
   if (relay_data_available_flag)

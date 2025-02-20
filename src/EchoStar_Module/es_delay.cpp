@@ -51,4 +51,11 @@ void es_delay::delay_s(uint32_t delay_time_s)
     this->delay_ms(delay_time_s * 1000);
 }
 
+
+uint32_t es_delay::get_current_epoch_time(void)
+{
+    uint32_t epoch = rtc.getEpoch();
+    return epoch;
+}
+
 es_delay DELAY_MANAGER;

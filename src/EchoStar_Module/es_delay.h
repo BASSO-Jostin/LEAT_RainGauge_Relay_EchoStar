@@ -14,6 +14,8 @@ public:
     void delay_ms(uint32_t delay_time_ms);
     void delay_s(uint32_t delay_time_s);
 
+    uint32_t get_current_epoch_time(void);
+
     static void alarm_match_irq(void *data)
     {
         // Do nothing here

@@ -4,7 +4,7 @@
 /**
  * Uncomment this define to force the terminal using Sleep mode for low power consumption.
  */
-// #define USING_SLEEP_MODE
+#define USING_SLEEP_MODE
 
 /**
  * Uncomment this define to enable LOG functions to show on the USB Serial console.
