@@ -63,17 +63,19 @@ void es_log::init(void)
     {
         // Do Nothing
 
-        // while (1) // Blocking program if no SDCard detected
-        // {
-        //     digitalWrite(LED_BUILTIN, HIGH);
-        //     delay(50);
-        //     digitalWrite(LED_BUILTIN, LOW);
-        //     delay(150);
-        //     digitalWrite(LED_BUILTIN, HIGH);
-        //     delay(50);
-        //     digitalWrite(LED_BUILTIN, LOW);
-        //     delay(500 + 150);
-        // }
+        for (int8_t counter = 5; counter > 0; counter--) // Blocking program if no SDCard detected
+        {
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(150);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(50);
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(150);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(50);
+
+            delay(500);
+        }
     }
 
 #endif /* USING_LOG_SD_CARD */
