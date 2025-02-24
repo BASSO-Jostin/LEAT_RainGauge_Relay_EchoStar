@@ -73,6 +73,7 @@ void setup(void)
   frame_Problem = 0; // Not complete paquet received
   relay_data_available_flag = false;
 
+  rtc.setEpoch(1740420300); // Monday, February 24, 2025 7:05:00 PM GMT+01:00
   send_status_timestamp_s = rtc.getEpoch() + (2 * 60); // After 2 mins
   relay_reset_timestamp_s = rtc.getEpoch() + RELAY_RESET_PERIOD_S;
 
