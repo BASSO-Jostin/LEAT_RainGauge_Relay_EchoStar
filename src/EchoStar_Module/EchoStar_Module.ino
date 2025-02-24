@@ -3,15 +3,19 @@
 #include "es_delay.h"
 #include "es_watchdog.h"
 #include "es_log.h"
+#include <STM32RTC.h>
 
 /* ============================== MACRO ============================== */
 
 #define RELAY_SERIAL Serial2
 #define RELAY_DATA_AVAILABLE_PIN PB5       // Wake_up pin activation
 #define RELAY_RESET PB6                    // Pin used to reset relay
-#define counter_reset (3 * 60 * 60 * 1000) // Counter used to reset relay each 3h
+#define RELAY_RESET_PERIOD_S (3 * 60 * 60) // Counter used to reset relay each 3h
+#define STATUS_PACKET_PERIOD_S (30 * 60)
 
 /* ============================== GLOBAL VARIABLES ============================== */
+
+static STM32RTC &rtc = STM32RTC::getInstance();
 
 int acknowledgment = 0;
 
@@ -21,8 +25,8 @@ uint8_t buffer_len = 0;
 uint16_t framecounter_uplink;
 uint16_t frame_Problem;
 
-uint32_t send_status_timestamp = 0;
-uint32_t last_timestamp = 0;
+uint32_t send_status_timestamp_s = 0;
+uint32_t relay_reset_timestamp_s = 0;
 
 bool relay_data_available_flag = false;
 
@@ -66,10 +70,11 @@ void setup(void)
   EM2050_soft_sleep_disable();
 
   framecounter_uplink = 0;
-  frame_Problem = 0;                                  // Not complete paquet received
-  send_status_timestamp = millis() + (5 * 60 * 1000); // After 5 mins
-  last_timestamp = millis();
+  frame_Problem = 0; // Not complete paquet received
   relay_data_available_flag = false;
+
+  send_status_timestamp_s = rtc.getEpoch() + (2 * 60); // After 2 mins
+  relay_reset_timestamp_s = rtc.getEpoch() + RELAY_RESET_PERIOD_S;
 
   LOG.println("[INFO] main::setup() | Initialization DONE, jumping to main loop");
 }
@@ -194,11 +199,11 @@ void loop(void)
 
   WATCHDOG.reload();
 
-  uint32_t last_timestamp=0;
+  uint32_t relay_reset_timestamp_s=0;
   uint32_t current_timestamp=millis();
   
-  if(current_timestamp - last_timestamp >= counter_reset){ //If it's more than 3h
-    last_timestamp = current_timestamp;
+  if(current_timestamp - relay_reset_timestamp_s >= RELAY_RESET_PERIOD_S){ //If it's more than 3h
+    relay_reset_timestamp_s = current_timestamp;
 
     digitalWrite(RELAY_RESET, LOW); //Reset the Relay
     delay(5);
@@ -210,13 +215,11 @@ void loop(void)
 #else // Main version of THAO
 void loop(void)
 {
-  uint32_t now_timestamp = millis();
+  uint32_t now_timestamp_s = rtc.getEpoch();
 
-  LOG.print("[INFO] main::loop() | Device wakeup, now_timestamp = ");
-  LOG.println((unsigned int)now_timestamp);
-
-  LOG.print("[INFO] main::loop() | Device wakeup, Current RTC Epoch = ");
-  LOG.println((unsigned int)DELAY_MANAGER.get_current_epoch_time());
+  LOG.println("\n\n\n\n");
+  LOG.print("[INFO] main::loop() | Device wakeup, now_timestamp_s = ");
+  LOG.println((unsigned int)now_timestamp_s);
 
   // Check if RELAY DATA is available? Send to satellite immidiately if yes.
   if (relay_data_available_flag)
@@ -233,32 +236,41 @@ void loop(void)
   }
 
   // Send status packet every 30 mins
-  if (now_timestamp >= send_status_timestamp)
+  if (now_timestamp_s >= send_status_timestamp_s)
   {
-    send_status_timestamp = now_timestamp + (30 * 60 * 1000); // Schedule the next status uplink
+    send_status_timestamp_s = now_timestamp_s + STATUS_PACKET_PERIOD_S; // Schedule the next status uplink
 
     LOG.print("[INFO] main::loop() | Sending status packet, next status packet is scheduled at ");
-    LOG.println((unsigned int)send_status_timestamp);
+    LOG.println((unsigned int)send_status_timestamp_s);
 
     send_status_packet();
   }
   else
   {
-    LOG.print("[INFO] main::loop() | Sending status packet timeout is not due. now_timestamp = ");
-    LOG.print((unsigned int)now_timestamp);
-    LOG.print("; send_status_timestamp = ");
-    LOG.println((unsigned int)send_status_timestamp);
+    LOG.print("[INFO] main::loop() | Sending status packet timeout is not due. now_timestamp_s = ");
+    LOG.print((unsigned int)now_timestamp_s);
+    LOG.print("; send_status_timestamp_s = ");
+    LOG.println((unsigned int)send_status_timestamp_s);
   }
 
-  if (now_timestamp - last_timestamp >= counter_reset)
+  // Reset relay
+  if (now_timestamp_s >= relay_reset_timestamp_s)
   { // If it's more than 3h
-    last_timestamp = now_timestamp;
+    relay_reset_timestamp_s = now_timestamp_s + RELAY_RESET_PERIOD_S;
+
+    LOG.print("[INFO] main::loop() | Resetting the relay, next relay reset is scheduled at ");
+    LOG.println((unsigned int)relay_reset_timestamp_s);
 
     digitalWrite(RELAY_RESET, LOW); // Reset the Relay
     delay(200);
     digitalWrite(RELAY_RESET, HIGH);
-
-    LOG.println("The relay has been reset");
+  }
+  else
+  {
+    LOG.print("[INFO] main::loop() | Relay reset timeout is not due. now_timestamp_s = ");
+    LOG.print((unsigned int)now_timestamp_s);
+    LOG.print("; relay_reset_timestamp_s = ");
+    LOG.println((unsigned int)relay_reset_timestamp_s);
   }
 
   // Reload WATCHDOG
