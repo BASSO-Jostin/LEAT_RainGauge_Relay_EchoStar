@@ -10,7 +10,7 @@
 #define RELAY_SERIAL Serial2
 #define RELAY_DATA_AVAILABLE_PIN PB5       // Wake_up pin activation
 #define RELAY_RESET PB6                    // Pin used to reset relay
-#define RELAY_RESET_PERIOD_S (3 * 60 * 60) // Counter used to reset relay each 3h
+#define RELAY_RESET_PERIOD_S (30 * 60) // Counter used to reset relay each 30m
 #define STATUS_PACKET_PERIOD_S (30 * 60)
 
 /* ============================== GLOBAL VARIABLES ============================== */
@@ -41,6 +41,8 @@ void setup(void)
 
   // Initialize es_log library
   LOG.init();
+  LOG.println("\n\n\n\n");
+  LOG.println("======================================================");
   LOG.print("[INFO] main::setup() | System restarted at ");
   LOG.println((unsigned int)millis());
 
@@ -73,7 +75,7 @@ void setup(void)
   frame_Problem = 0; // Not complete paquet received
   relay_data_available_flag = false;
 
-  rtc.setEpoch(1740420300); // Monday, February 24, 2025 7:05:00 PM GMT+01:00
+  rtc.setEpoch(1740584100); // Wednesday, February 26, 2025 4:35:00 PM GMT+01:00
   send_status_timestamp_s = rtc.getEpoch() + (2 * 60); // After 2 mins
   relay_reset_timestamp_s = rtc.getEpoch() + RELAY_RESET_PERIOD_S;
 
@@ -114,7 +116,7 @@ void loop(void)
   }
   else
   {
-    LOG.print("[INFO] main::loop() | Sending status packet timeout is not due. now_timestamp_s = ");
+    LOG.print("[INFO] main::loop() | Status timeout is not due. now_timestamp_s = ");
     LOG.print((unsigned int)now_timestamp_s);
     LOG.print("; send_status_timestamp_s = ");
     LOG.println((unsigned int)send_status_timestamp_s);
@@ -172,21 +174,12 @@ void gpio_init(void)
   digitalWrite(GNSS_PWR_ENABLE_PIN, LOW);
 
   pinMode(SENSORS_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(SENSORS_PWR_ENABLE_PIN, LOW);
+  digitalWrite(SENSORS_PWR_ENABLE_PIN, HIGH);
 
-#if defined(ECHOSTAR_PWR_ENABLE_PIN)
   pinMode(ECHOSTAR_PWR_ENABLE_PIN, OUTPUT);
   digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, LOW);
   delay(500);
   digitalWrite(ECHOSTAR_PWR_ENABLE_PIN, HIGH);
-#endif
-
-#if defined(DPDT_PWR_ENABLE_PIN)
-  pinMode(DPDT_PWR_ENABLE_PIN, OUTPUT);
-  digitalWrite(DPDT_PWR_ENABLE_PIN, HIGH);
-#endif
-  pinMode(DPDT_CTRL_PIN, OUTPUT);
-  digitalWrite(DPDT_CTRL_PIN, HIGH);
 
   attachInterrupt(digitalPinToInterrupt(RELAY_DATA_AVAILABLE_PIN), relay_data_available_io_usr, RISING);
 }
