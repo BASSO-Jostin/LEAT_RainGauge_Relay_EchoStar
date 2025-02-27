@@ -169,6 +169,9 @@ void gpio_init(void)
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RELAY_RESET, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(RELAY_RESET, LOW);
+  delay(500);
+  digitalWrite(RELAY_RESET, HIGH);
   
 
   // put your setup code here, to run once:
