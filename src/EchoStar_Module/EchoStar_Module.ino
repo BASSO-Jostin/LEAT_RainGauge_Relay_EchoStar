@@ -77,7 +77,7 @@ void setup(void)
 
   rtc.setEpoch(1740584100); // Wednesday, February 26, 2025 4:35:00 PM GMT+01:00
   send_status_timestamp_s = rtc.getEpoch() + (2 * 60); // After 2 mins
-  relay_reset_timestamp_s = rtc.getEpoch() + RELAY_RESET_PERIOD_S;
+  relay_reset_timestamp_s = rtc.getEpoch() + (2 * 60); // After 2 mins
 
   LOG.println("[INFO] main::setup() | Initialization DONE, jumping to main loop");
 }
@@ -131,7 +131,7 @@ void loop(void)
     LOG.println((unsigned int)relay_reset_timestamp_s);
 
     digitalWrite(RELAY_RESET, LOW); // Reset the Relay
-    delay(200);
+    delay(500);
     digitalWrite(RELAY_RESET, HIGH);
   }
   else
@@ -167,7 +167,9 @@ void loop(void)
 void gpio_init(void)
 {
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(RELAY_RESET, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
+  
 
   // put your setup code here, to run once:
   pinMode(GNSS_PWR_ENABLE_PIN, OUTPUT);
