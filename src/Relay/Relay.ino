@@ -11,8 +11,9 @@
 
 #include <RFThings.h>
 #include <rfthings_sx126x.h>
-#include <RTC.h>
+//#include <RTC.h>
 #include <time.h>
+
 
 // Device information (For uploading relay status)
 static uint8_t nwkS_key[] = { 0x2B, 0x65, 0xA2, 0x97, 0x60, 0xB9, 0x15, 0xDE, 0x10, 0x59, 0x67, 0x75, 0x16, 0xA8, 0xE9, 0x1D };  // <-- MODIFY THIS INFORMATION ACCORDING TO YOUR USECASE
@@ -37,12 +38,6 @@ char hexPayload[50];  // Every byte = 2 caracters hex + '\0'
 void setup(void) {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-  delay(125);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(50);
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(125);
-  digitalWrite(LED_BUILTIN, LOW);
 
 
   pinMode(LS_GPS_ENABLE, OUTPUT);
@@ -75,16 +70,17 @@ void setup(void) {
 
   //Initialize the Serial mode
   Serial3.begin(115200);
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
   pinMode(EchoStarActivation, OUTPUT);
 
-  delay(2000);
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 void loop(void) {
   //sx126x.set_frequency(866600000);
-  Serial.println("Loop");
+  //Serial.println("Loop");
 
   digitalWrite(EchoStarActivation, LOW);  //Put the the module EchoStar on sleep
 
@@ -92,6 +88,7 @@ void loop(void) {
     case RFT_STATUS_OK:
       if (payload_len > 0) {
         //Serial.begin(115200);
+
         digitalWrite(EchoStarActivation, HIGH);  //Wake up the module EchoStar
         delay(1000);                             //Delay before forwarding
 
@@ -106,52 +103,41 @@ void loop(void) {
         //The forward to the EchoStar module by using the serial mode
         Serial3.write(hexPayload);
 
-        Serial.println("Received");
+        //Serial.println("Received");
 
-        int a = 1;
-        //What i am going to add
-        while (a == 1 /*!Serial3.available()*/) {
-          while (!Serial3.available())
-            ;
-          int lecture = Serial3.read();
+        //Waiting the aknowledge from EchoStar Module
+        while (!Serial3.available())
+          ;
+        int lecture = Serial3.read();
 
-          int sortir = 1;
-          Serial.println("Waiting acknowledgment");
+        //if we receive NAK from EchoStar, we send 5 times and if the paquet was not complete too, we continue
+        for (int i = 0; i < 5; i++) {
+          if (lecture == 1) {  //1 for NAK
+            Serial3.write(hexPayload);
+            delay(1000);
+            while (!Serial3.available())
+              ;
+            lecture = Serial3.read();
+          }
+
+          else if (lecture == 2) {
+            break;
+          }
+        }
+
+
+        if (lecture == 2) {  //2 for ACK
+          digitalWrite(LED_BUILTIN, LOW);
+          //Serial.println("Received acknowledgment");
+
+          //Blinking to show that the packet was complete
           digitalWrite(LED_BUILTIN, HIGH);
-
-          /*digitalWrite(LED_BUILTIN, HIGH);
           delay(125);
           digitalWrite(LED_BUILTIN, LOW);
           delay(50);
           digitalWrite(LED_BUILTIN, HIGH);
           delay(125);
-          digitalWrite(LED_BUILTIN, LOW);*/
-
-          // while (Serial3.available()) {
-          // int lecture = Serial3.read();
-          while (lecture == 1) {  //1 for NAK
-            Serial3.write(hexPayload);
-            delay(1000);
-            lecture = Serial3.read();
-            sortir = 2;
-          }
-          if (lecture == 2) {  //2 for ACK
-            sortir = 2;
-            digitalWrite(LED_BUILTIN, LOW);
-            Serial.println("Received acknowledgment");
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(125);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(50);
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(125);
-            digitalWrite(LED_BUILTIN, LOW);
-          }
-          // }
-
-          if (sortir == 2) {
-            break;
-          }
+          digitalWrite(LED_BUILTIN, LOW);
         }
 
 
