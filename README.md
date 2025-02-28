@@ -30,7 +30,7 @@ Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_A
 
 Node-RED is an open-source development tool designed to receive data sent from the RainGauge to the satellite via MQTT, with the aim of storing it in the database
 
-!(https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/tree/main/Picture/Node_Red.PNG)
+<img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/tree/main/Picture/Node_Red.PNG">
 
 ## Contributors
 
