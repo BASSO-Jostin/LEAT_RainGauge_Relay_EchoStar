@@ -30,7 +30,7 @@ The relay receiver is an UCA_AIoT Board.
 
 Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_AIOT](https://github.com/FabienFerrero/UCA_AIOT).
 
-<img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=200 height=200 style="vertical-align:middle">
+<img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=200 height=200 style="vertical-align:middle; margin:50px">
 
 ## Node-RED
 
