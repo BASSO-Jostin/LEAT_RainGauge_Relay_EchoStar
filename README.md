@@ -15,7 +15,7 @@ EchoStar is a LoRaWAN terminal that uses the EM2050 LoRaWAN module, developed by
 Details of the EchoStar terminal can be found here: [github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP](https://github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP).
 
 <p align="center"> 
-  <img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/EchoStar.PNG" width=550 height=300>
+  <img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/EchoStar.PNG" width=550 height=290>
 </p>
 
 ### RainGauge
