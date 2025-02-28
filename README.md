@@ -26,6 +26,12 @@ The relay receiver is an UCA_AIoT Board.
 
 Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_AIOT](https://github.com/FabienFerrero/UCA_AIOT).
 
+## Node-RED
+
+Node-RED is an open-source development tool designed to receive data sent from the RainGauge to the satellite via MQTT, with the aim of storing it in the database.
+
+https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/Picture/Node_Red.PNG
+
 ## Contributors
 
 - **Author:** Galci Jostin Basso-Bibila
