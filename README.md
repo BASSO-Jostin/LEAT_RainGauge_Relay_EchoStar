@@ -22,7 +22,7 @@ RainGauge is a compact, low-power LoRaWAN-based rain sensor. This sensor is also
 
 Details of the RainGauge can be found here: [github.com/FabienFerrero/RainGauge](https://github.com/FabienFerrero/RainGauge).
 
-![image](https://github.com/BASSO-Jostin/RainGauge_BLE/blob/main/Picture/RainGauge-connect_1.png)
+<img src="https://github.com/BASSO-Jostin/RainGauge_BLE/blob/main/Picture/RainGauge-connect_1.png">
 
 ### Relay Receiver
 
@@ -30,7 +30,7 @@ The relay receiver is an UCA_AIoT Board.
 
 Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_AIOT](https://github.com/FabienFerrero/UCA_AIOT).
 
-![image](https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg)
+<img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=200 height=200>
 
 ## Node-RED
 
