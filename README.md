@@ -14,7 +14,9 @@ EchoStar is a LoRaWAN terminal that uses the EM2050 LoRaWAN module, developed by
 
 Details of the EchoStar terminal can be found here: [github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP](https://github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP).
 
-<img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/EchoStar.PNG">
+<p align="center"> 
+  <img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/EchoStar.PNG">
+</p>
 
 ### RainGauge
 
@@ -22,7 +24,9 @@ RainGauge is a compact, low-power LoRaWAN-based rain sensor. This sensor is also
 
 Details of the RainGauge can be found here: [github.com/FabienFerrero/RainGauge](https://github.com/FabienFerrero/RainGauge).
 
-<img src="https://github.com/BASSO-Jostin/RainGauge_BLE/blob/main/Picture/RainGauge-connect_1.png">
+<p align="center"> 
+  <img src="https://github.com/BASSO-Jostin/RainGauge_BLE/blob/main/Picture/RainGauge-connect_1.png">
+</p>
 
 ### Relay Receiver
 
@@ -31,7 +35,7 @@ The relay receiver is an UCA_AIoT Board.
 Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_AIOT](https://github.com/FabienFerrero/UCA_AIOT).
 
 <p align="center"> 
-  <img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=200 height=200 style="vertical-align:middle; margin:50px">
+  <img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=800 height=800>
 </:P>
 
 ## Node-RED
