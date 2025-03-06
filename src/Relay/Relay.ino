@@ -89,16 +89,14 @@ void loop(void) {
       if (payload_len > 0) {
         //Serial.begin(115200);
 
-        digitalWrite(EchoStarActivation, HIGH);  //Wake up the module EchoStar
-        delay(1000);                             //Delay before forwarding
-
-        sx126x.set_tx_power(14);
-
 
         memset(hexPayload, 0, 50);
         for (int i = 0; i < 19; i++) {
           sprintf(&hexPayload[2 * i], "%02X", payload[i]);  // Convert every byte to hex
         }
+
+        digitalWrite(EchoStarActivation, HIGH);  // Wake up the module EchoStar
+        delay(500);                             // Delay before forwarding
 
         //The forward to the EchoStar module by using the serial mode
         Serial3.write(hexPayload);
