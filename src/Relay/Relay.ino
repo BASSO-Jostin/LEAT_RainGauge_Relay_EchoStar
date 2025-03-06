@@ -96,7 +96,7 @@ void loop(void) {
         }
 
         digitalWrite(EchoStarActivation, HIGH);  // Wake up the module EchoStar
-        delay(500);                             // Delay before forwarding
+        delay(500);                              // Delay before forwarding
 
         //The forward to the EchoStar module by using the serial mode
         Serial3.write(hexPayload);
@@ -104,7 +104,7 @@ void loop(void) {
         //Serial.println("Received");
 
         //Waiting the aknowledge from EchoStar Module
-        while (!Serial3.available())
+        /*while (!Serial3.available())
           ;
         int lecture = Serial3.read();
 
@@ -121,22 +121,22 @@ void loop(void) {
           else if (lecture == 2) {
             break;
           }
-        }
+        }*/
 
 
-        if (lecture == 2) {  //2 for ACK
-          digitalWrite(LED_BUILTIN, LOW);
-          //Serial.println("Received acknowledgment");
+        //if (lecture == 2) {  //2 for ACK
+        digitalWrite(LED_BUILTIN, LOW);
+        //Serial.println("Received acknowledgment");
 
-          //Blinking to show that the packet was complete
-          digitalWrite(LED_BUILTIN, HIGH);
-          delay(125);
-          digitalWrite(LED_BUILTIN, LOW);
-          delay(50);
-          digitalWrite(LED_BUILTIN, HIGH);
-          delay(125);
-          digitalWrite(LED_BUILTIN, LOW);
-        }
+        //Blinking to show that the packet was complete
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(125);
+        digitalWrite(LED_BUILTIN, LOW);
+        delay(50);
+        digitalWrite(LED_BUILTIN, HIGH);
+        delay(125);
+        digitalWrite(LED_BUILTIN, LOW);
+        //}
 
 
         delay(1000);

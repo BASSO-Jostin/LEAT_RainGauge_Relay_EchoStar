@@ -336,14 +336,14 @@ void read_data_from_relay(void)
 
   if (acknowledgment == 1)
   {
-    RELAY_SERIAL.write(1); // 1 for NAK
+    //RELAY_SERIAL.write(1); // 1 for NAK
     LOG.println("I am 1 ");
     frame_Problem += 1;
     acknowledgment = 0;
   }
   else if (acknowledgment == 2)
   {
-    RELAY_SERIAL.write(2); // 2 for ACK
+    //RELAY_SERIAL.write(2); // 2 for ACK
     LOG.println("I am 2 ");
     acknowledgment = 0;
   }
