@@ -231,6 +231,9 @@ void read_data_from_relay(void)
 
   uint16_t bat = read_bat();
 
+  RELAY_SERIAL.flush();
+  delay(1000);
+
   // When RELAY_SERIAL receives data from the relay
   while (RELAY_SERIAL.available())
   {
