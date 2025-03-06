@@ -15,7 +15,7 @@ EchoStar is a LoRaWAN terminal that uses the EM2050 LoRaWAN module, developed by
 Details of the EchoStar terminal can be found here: [github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP](https://github.com/nguyenmanhthao996tn/LEAT-EchoStar-Terminal-BSP).
 
 <p align="center"> 
-  <img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/EchoStar.PNG" width=550 height=290>
+  <img src="./docs/Picture/EchoStar.PNG" width=550 height=290>
 </p>
 
 ### RainGauge
@@ -36,13 +36,15 @@ Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_A
 
 <p align="center"> 
   <img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=550 height=400>
-</:P>
+</p>
 
 ## Node-RED
 
 Node-RED is an open-source development tool used to receive data sent from the RainGauge to the satellite via MQTT, with the aim of storing it in the database
 
-<img src="https://github.com/BASSO-Jostin/LEAT_RainGauge_Relay_EchoStar/blob/main/Picture/Node_Red.PNG">
+<p align="center"> 
+<img src="./docs/Picture/Node_Red.PNG">
+</p>
 
 ## Contributors
 
