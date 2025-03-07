@@ -14,6 +14,17 @@
 //#include <RTC.h>
 #include <time.h>
 
+/**
+ * @brief Check if USB is enabled.
+ * 
+ * The USB should be disabled for low-power activities or deployment on battery.
+ * 
+ * Comment out this section if you need the USB Serial for debugging.
+ */
+#if (USB_TYPE != USB_TYPE_NONE)
+#error Please disable USB from the Tools menu of your Arduino IDE for low-power operation.
+#endif
+
 
 // Device information (For uploading relay status)
 static uint8_t nwkS_key[] = { 0x2B, 0x65, 0xA2, 0x97, 0x60, 0xB9, 0x15, 0xDE, 0x10, 0x59, 0x67, 0x75, 0x16, 0xA8, 0xE9, 0x1D };  // <-- MODIFY THIS INFORMATION ACCORDING TO YOUR USECASE

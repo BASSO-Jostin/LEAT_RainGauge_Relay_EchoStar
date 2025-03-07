@@ -50,6 +50,17 @@
 /* ----------------------------------------------------- */
 /*** THIS SECTION IS FOR MACROS OF DEFINE CHECKING, DO NOT CHANGE ***/
 
+/**
+ * @brief Check if USB is enabled.
+ *
+ * The USB should be disabled for low-power activities or deployment on battery.
+ *
+ * Comment out this section if you need the USB Serial for debugging.
+ */
+#if (defined(USING_SLEEP_MODE) && (defined(USBD_USE_CDC) || defined(USBD_USE_HID_COMPOSITE)))
+#error Please disable USB from the Tools menu of your Arduino IDE for low-power operation.
+#endif
+
 /*********************************************************/
 
 #endif /* PROJECT_CONFIGURATION_H */
