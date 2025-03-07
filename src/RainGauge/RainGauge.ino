@@ -121,7 +121,7 @@ void setup()
 
 
   //P2P Parameters
-  Serial.begin(115200);
+  // Serial.begin(115200);
     // Exemple : Demander la version du firmware"
       if(api.lora.nwm.get() != 0)
     {
@@ -136,6 +136,8 @@ void setup()
   api.lora.ppl.set(976);
   api.lora.ptp.set(14);
   api.lora.syncword.set(0x3444);  
+
+  Serial.println("AT+LBT=1"); //Activate LBT Mode -> Listen Before Talk
  
 }
 
