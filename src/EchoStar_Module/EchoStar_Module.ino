@@ -197,7 +197,7 @@ void echostar_init(void)
 void send_status_packet(void)
 {
   // TODO: Compose an actual status packet! It should included data like: Battery voltage, temperature, humidity, counters, etc.
-  ECHOSTAR_SERIAL.println("AT+SEND=1,0,9,0,THIS\r\n");
+  ECHOSTAR_SERIAL.println("AT+SEND=1,0,9,1,THIS\r\n");
 }
 
 void EM2050_soft_sleep_enable(void)
@@ -302,12 +302,12 @@ void read_data_from_relay(void)
       char command[150];
       memset(command, 0, 150);
 
-      sprintf(command, "AT+SEND=1,0,8,0,%s\r\n", buffer);
+      sprintf(command, "AT+SEND=1,0,8,1,%s\r\n", buffer);
       LOG.println("To see what is in the buffer ");
       LOG.println(command);
       delay(100);
 
-      sprintf(command_packet, "AT+SEND=1,0,8,0,%s\r\n", packet);
+      sprintf(command_packet, "AT+SEND=1,0,8,1,%s\r\n", packet);
       LOG.println("To see what is sent ");
       LOG.println(command_packet);
 
