@@ -340,6 +340,7 @@ void read_data_from_relay(void)
     LOG.println("I am 1 ");
     frame_Problem += 1;
     acknowledgment = 0;
+    buffer_len = 0; // Reset the counter after failing to send
   }
   else if (acknowledgment == 2)
   {
