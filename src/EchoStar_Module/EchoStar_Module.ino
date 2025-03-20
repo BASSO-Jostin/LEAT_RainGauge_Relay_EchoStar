@@ -178,7 +178,7 @@ void gpio_init(void) {
 
 void echostar_init(void) {
   ECHOSTAR_SERIAL.begin(115200);
-  ECHOSTAR_SERIAL.write("AT+TXPMSS=20\r\n");
+  ECHOSTAR_SERIAL.write("AT+TXPMSS=23\r\n");
 }
 
 void send_status_packet(void) {
