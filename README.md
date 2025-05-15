@@ -50,8 +50,10 @@ The second version uses a single board divided into two sections: one dedicated 
 
 This board receives data from the relay and then forwards the received data to the satellite
 
+Details can be found here: [github.com/nguyenmanhthao996tn/ApolloEcho_Dev_Kit_PCB](https://github.com/nguyenmanhthao996tn/ApolloEcho_Dev_Kit_PCB).
+
 <p align="center"> 
-<img src="./docs/Picture/Relay_EchoStar.png">
+<img src="./docs/Picture/Relay_EchoStar.png" width=550 height=600>
 </p>
 
 ## Node-RED
