@@ -5,18 +5,8 @@
     / /___/ /_/ / _, _/ /_/ /___/ / /_/ / /_/ / /__/  __/ /___/ / /_/ /
    /_____/\____/_/ |_|\__,_//____/ .___/\__,_/\___/\___/_____/_/_.___/
                                 /_/
-   Author: mtnguyen
+   Author: jostin, mtnguyen
    This library jointy developed by UCA & RFThings
-
-   This example continuously listens for LoRaWAN packets from sensors (or other
-   LoRaWAN device) & prints packet information to Serial Monitor if it's successfully
-   received. This sketch is NOT included packet integrity check, packet sender
-   address filter, and repeat the received packet.
-
-   This relay example included the sleep for low-power consumption. Disable
-   U(S)ART Support in Arduino IDE Tool Menu & uncommnet
-   USE_LOW_POWER_FEATURE_WITH_SLEEP option to archive low-power mode.
-
 */
 
 #include <RFThings.h>

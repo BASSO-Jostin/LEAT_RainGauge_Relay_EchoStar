@@ -1,3 +1,10 @@
+/*
+Author: jostin, m1nhle, mtnguyen
+
+This program receives data from the relay via the Tx and Rx pins, and then forwards the received data to the satellite.
+
+*/
+
 /* ============================== LIBRARIES ============================== */
 #include "Project_configuration.h"
 #include "es_delay.h"
