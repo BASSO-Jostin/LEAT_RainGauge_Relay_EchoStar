@@ -22,7 +22,7 @@ Details of the RainGauge can be found here: [github.com/FabienFerrero/RainGauge]
 
 The First version uses two different boards, one for relay and the other one for the Module EchoStar
 
-#### Relay Receiver
+### Relay Receiver
 
 The relay receiver is an UCA_AIoT Board.
 
@@ -32,7 +32,7 @@ Details of the UCA_AIoT Board can be found here: [github.com/FabienFerrero/UCA_A
   <img src="https://github.com/FabienFerrero/UCA_AIOT/blob/main/doc/board.jpg" width=550 height=400>
 </p>
 
-#### EchoStar
+### EchoStar
 
 EchoStar is a LoRaWAN terminal that uses the EM2050 LoRaWAN module, developed by the **CMA Team** at **Laboratoire d'Electronique, Antennes et Télécommunications (LEAT), Université Côte d'Azur**. It utilizes EchoStar Mobile for satellite and terrestrial communication.
 
