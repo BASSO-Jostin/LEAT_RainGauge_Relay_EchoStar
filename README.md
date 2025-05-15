@@ -42,7 +42,7 @@ Details of the EchoStar terminal can be found here: [github.com/nguyenmanhthao99
   <img src="./docs/Picture/EchoStar.PNG" width=550 height=290>
 </p>
 
-### Second VersIon
+### Second Version
 
 The second version uses a single board divided into two sections: one dedicated to the RAK3172 for the relay, and the other to the EchoStar module.
 
