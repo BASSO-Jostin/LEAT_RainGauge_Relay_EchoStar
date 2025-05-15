@@ -18,7 +18,7 @@ Details of the RainGauge can be found here: [github.com/FabienFerrero/RainGauge]
   <img src="https://github.com/BASSO-Jostin/RainGauge_BLE/blob/main/Picture/RainGauge-connect_1.png" width=550 height=400>
 </p>
 
-### First Verison
+### First Version
 
 The First version uses two different boards, one for relay and the other one for the Module EchoStar
 
@@ -42,7 +42,7 @@ Details of the EchoStar terminal can be found here: [github.com/nguyenmanhthao99
   <img src="./docs/Picture/EchoStar.PNG" width=550 height=290>
 </p>
 
-### Second Verison
+### Second VersIon
 
 The second version uses a single board divided into two sections: one dedicated to the RAK3172 for the relay, and the other to the EchoStar module.
 
