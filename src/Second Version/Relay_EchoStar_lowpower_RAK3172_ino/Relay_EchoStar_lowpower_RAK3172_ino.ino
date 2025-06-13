@@ -17,7 +17,7 @@
 
 #define USE_LOW_POWER_FEATURE_WITH_SLEEP
 
-HardwareSerial Serial2(PA3, PA2);
+HardwareSerial Serial2(PA3, PA2);  //Serial for AT Commands to send to the Satellite through the module EchoStar
 HardwareSerial Serial1(PB7, PB6);
 
 #if defined(HAL_UART_MODULE_ENABLED)
@@ -45,6 +45,12 @@ uint32_t payload_len;
 #define SW_VCTL2_PIN PC13
 
 #define USR_LED_PIN PA9
+
+
+bool ackReceived = false;
+String inputBuffer = "";
+
+
 
 char hexPayload[50];  // Every byte = 2 caracters hex + '\0'
 uint16_t framecounter_uplink;
@@ -194,10 +200,18 @@ void loop(void) {
         LOG_D_LN("To see what is sent ");
         LOG_D_LN(command_packet);
 
+
         // Sending packet with AT + SEND command to the satellite
         Serial2.println(command_packet);
         LOG_D("This is the packet which is sent : ");
         LOG_D_LN(command_packet);
+
+
+        waitForAck();  //Checking the message has been received or not
+        if (ackReceived == 0) {// If not received, we send again
+          Serial2.println(command_packet);
+        }
+
 
 
 
@@ -288,4 +302,29 @@ void echostar_init(void) {
 void send_status_packet(void) {
   // TODO: Compose an actual status packet! It should included data like: Battery voltage, temperature, humidity, counters, etc.
   Serial2.println("AT+SEND=1,0,9,1,THIS\r\n");
+}
+
+
+
+
+void waitForAck() {
+  unsigned long startTime = millis();
+  inputBuffer = "";
+
+  while (millis() - startTime < 10000) {  // Timeout de 10 secondes
+    while (Serial2.available()) {
+      char c = Serial2.read();
+      inputBuffer += c;
+    }
+
+    if (inputBuffer.indexOf("SENT: 1") != -1) {
+      ackReceived = true;
+      LOG_D_LN("=> ACK reçu : Message reçu !");
+      return;
+    } else if (inputBuffer.indexOf("NOT_SENT: 1") != -1) {
+      ackReceived = false;
+      LOG_D_LN("=> ACK NON reçu : Message NON reçu !");
+      return;
+    }
+  }
 }

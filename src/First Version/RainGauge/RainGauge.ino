@@ -21,14 +21,14 @@
 
 */
 
-const char *sw_version = "1.0.0";
+/*const char *sw_version = "1.0.0";
 const char *model_id = "RAK11720";
 const char *chip_id = "CHIP12345678";
 const char *build_date = __DATE__;
 const char *build_time = __TIME__;
 const char *repo_info = "GitHub repo info";
 const char *cli_version = "CLI v1.0";
-const char *api_version = "API v1.0";
+const char *api_version = "API v1.0";*/
 
 #include "Adafruit_SHTC3.h"
 #include <stdint.h>//http://librarymanager/All#Adafruit_SHTC3
@@ -156,7 +156,7 @@ void uplink_routine()
 
   unsigned char MAC_header = 0x40; // Unconfirmed data up
 	unsigned char FCtrl = 0x00;
-  static uint8_t device_address[] = {0x26, 0x0B, 0xBD, 0xAC}; 
+  static uint8_t device_address[] = {0x26, 0x0B, 0xBD, 0xBD}; 
   uint8_t tx_port = 1;
   
   unsigned char MIC[4];
@@ -254,7 +254,7 @@ void loop()
   uplink_routine();
   buttonFlag = 0;
     if (rain_count==0) {
-    ABP_PERIOD=1800000;
+    ABP_PERIOD=600000;
     Serial.println("You send information every 30 minutes");
   } else {
     ABP_PERIOD=180000;
