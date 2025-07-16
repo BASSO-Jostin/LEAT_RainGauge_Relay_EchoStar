@@ -5,12 +5,14 @@ This program receives data from the relay via the Tx and Rx pins, and then forwa
 
 */
 
+
 /* ============================== LIBRARIES ============================== */
 #include "Project_configuration.h"
 #include "es_delay.h"
 #include "es_watchdog.h"
 #include "es_log.h"
 #include <STM32RTC.h>
+
 
 /* ============================== MACRO ============================== */
 
@@ -20,24 +22,28 @@ This program receives data from the relay via the Tx and Rx pins, and then forwa
 #define RELAY_RESET_PERIOD_S (30 * 60)  // Counter used to reset relay each 30m
 #define STATUS_PACKET_PERIOD_S (30 * 60)
 
+
 /* ============================== GLOBAL VARIABLES ============================== */
 
 static STM32RTC &rtc = STM32RTC::getInstance();
 
-int acknowledgment = 0;
-
 char buffer[255];
 uint8_t buffer_len = 0;
 
-uint16_t framecounter_uplink;
-uint16_t frame_Problem;
+uint16_t framecounter_uplink = 0;
+uint16_t frame_Problem = 0;
 
 uint32_t send_status_timestamp_s = 0;
 uint32_t relay_reset_timestamp_s = 0;
 
 bool relay_data_available_flag = false;
 
+bool ackReceived = false;
+String inputBuffer = "";
+
+
 /* ============================== MAIN ============================== */
+
 void setup(void) {
   // Initialize es_delay library
   DELAY_MANAGER.init();
@@ -74,8 +80,6 @@ void setup(void) {
   }
   EM2050_soft_sleep_disable();
 
-  framecounter_uplink = 0;
-  frame_Problem = 0;  // Not complete paquet received
   relay_data_available_flag = false;
 
   rtc.setEpoch(1743681600);                             // Wednesday, February 26, 2025 4:35:00 PM GMT+01:00
@@ -84,6 +88,9 @@ void setup(void) {
 
   LOG.println("[INFO] main::setup() | Initialization DONE, jumping to main loop");
 }
+
+
+/* ============================== LOOP ============================== */
 
 void loop(void) {
   uint32_t now_timestamp_s = rtc.getEpoch();
@@ -225,13 +232,11 @@ void read_data_from_relay(void) {
 
   // When RELAY_SERIAL receives data from the relay
   while (RELAY_SERIAL.available()) {
-    acknowledgment = 1;  // When data is received but the paquet is not complete
     buffer[buffer_len++] = RELAY_SERIAL.read();
     // To see what is received
     LOG.println(buffer_len);
 
     if (buffer_len == 38) {
-      acknowledgment = 2;  // the paquet is complete
 
       char packet[255];
       int packet_len = 0;
@@ -297,10 +302,23 @@ void read_data_from_relay(void) {
       LOG.println("To see what is sent ");
       LOG.println(command_packet);
 
+      while (ECHOSTAR_SERIAL.available()) ECHOSTAR_SERIAL.read();  //Empty the Buffer
+      delay(100);
+
       // Sending packet with AT + SEND command to the satellite
       ECHOSTAR_SERIAL.println(command_packet);
       LOG.print("This is the packet which is sent : ");
       LOG.println(command_packet);
+
+      waitForAck();  //Checking the message has been received or not
+
+      for (int i = 0; i < 2 && ackReceived == false; i++) {
+        LOG.println("New attempt");
+        while (ECHOSTAR_SERIAL.available()) ECHOSTAR_SERIAL.read();  // Empty again
+        delay(1000);
+        ECHOSTAR_SERIAL.println(command_packet);
+        waitForAck();
+      }
 
       // Insertion of data frame counter, battery and frame problem for debugging
       LOG.print("Data Frame Counter");
@@ -320,19 +338,6 @@ void read_data_from_relay(void) {
     }
   }
 
-  if (acknowledgment == 1) {
-    //RELAY_SERIAL.write(1); // 1 for NAK
-    LOG.println("I am 1 ");
-    frame_Problem += 1;
-    acknowledgment = 0;
-    buffer_len = 0;  // Reset the counter after failing to send
-  } else if (acknowledgment == 2) {
-    //RELAY_SERIAL.write(2); // 2 for ACK
-    LOG.println("I am 2 ");
-    acknowledgment = 0;
-  }
-
-  delay(1000);
 }
 
 /* ============================== INTERRUPTS ============================== */
@@ -340,6 +345,48 @@ void read_data_from_relay(void) {
 void relay_data_available_io_usr(void) {
   // INFO: This function is for waking-up the MCU only. No need to do anything here.
   relay_data_available_flag = true;
+}
+
+/* ============================== ACKNOWLEDGMENT ============================== */
+
+void waitForAck() {
+  unsigned long startTime = millis();
+  inputBuffer = "";
+  ackReceived = false;
+
+  while (millis() - startTime < 15000) {  // 15s timeout
+    while (ECHOSTAR_SERIAL.available()) {
+      char c = ECHOSTAR_SERIAL.read();
+      inputBuffer += c;
+
+      delay(1);
+
+      // Line by line checking
+      if (c == '\n') {
+        LOG.println(inputBuffer);
+        inputBuffer.trim();
+
+        // Check if the line is the success
+        if (inputBuffer.indexOf("SENT:1") != -1 && inputBuffer.indexOf("NOT_SENT:1") == -1) {
+          ackReceived = true;
+          LOG.println("ACK reçu : Message reçu !");
+          framecounter_uplink += 1;
+          return;
+        }
+
+        // Vérifie si la ligne indique un échec
+        if (inputBuffer.indexOf("NOT_SENT:1") != -1 || inputBuffer.indexOf("ERROR") != -1) {
+          LOG.println("ACK NON reçu : Message NON reçu !");
+          frame_Problem += 1;  // Increment if not send
+          return;
+        }
+
+        inputBuffer = "";  // Reinitialize for the next line
+      }
+    }
+  }
+
+  LOG.println("Timeout sans ACK clair");
 }
 
 /* ============================== END ============================== */
