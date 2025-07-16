@@ -1,24 +1,26 @@
 /*
-       __          ____        _____                       __    _ __
-      / /   ____  / __ \____ _/ ___/____  ____ _________  / /   (_) /_
-     / /   / __ \/ /_/ / __ `/\__ \/ __ \/ __ `/ ___/ _ \/ /   / / __ \
-    / /___/ /_/ / _, _/ /_/ /___/ / /_/ / /_/ / /__/  __/ /___/ / /_/ /
-   /_____/\____/_/ |_|\__,_//____/ .___/\__,_/\___/\___/_____/_/_.___/
-                                /_/
+
    Author: jostin, mtnguyen
-   This library jointy developed by UCA & RFThings
+
+   This program receives data from the sensor via LoRa P2P, and then forwards the received data to the satellite.
+
 */
+
+
+/* ============================== LIBRARIES ============================== */
 
 #include <RFThings.h>
 #include <radio/sx126x/rfthings_sx126x.h>
 #include <STM32LowPower.h>  // https://github.com/stm32duino/STM32LowPower
-
 #include "Project_configuration.h"
+#include "es_watchdog.h"
 
-#define USE_LOW_POWER_FEATURE_WITH_SLEEP
+/* ============================== MACRO ============================== */
 
 HardwareSerial Serial2(PA3, PA2);  //Serial for AT Commands to send to the Satellite through the module EchoStar
 HardwareSerial Serial1(PB7, PB6);
+
+#define USE_LOW_POWER_FEATURE_WITH_SLEEP
 
 #if defined(HAL_UART_MODULE_ENABLED)
 #define LOG_D(...) Serial1.print(__VA_ARGS__)
@@ -27,6 +29,14 @@ HardwareSerial Serial1(PB7, PB6);
 #define LOG_D(...)
 #define LOG_D_LN(...)
 #endif
+
+#define ECHOSTAR_SERIAL Serial2
+#define SW_VCTL1_PIN PB8
+#define SW_VCTL2_PIN PC13
+#define USR_LED_PIN PA9
+
+
+/* ============================== GLOBAL VARIABLES ============================== */
 
 // Device information (For uploading relay status)
 static uint8_t nwkS_key[] = { 0x2B, 0x65, 0xA2, 0x97, 0x60, 0xB9, 0x15, 0xDE, 0x10, 0x59, 0x67, 0x75, 0x16, 0xA8, 0xE9, 0x1D };  // <-- MODIFY THIS INFORMATION ACCORDING TO YOUR USECASE
@@ -41,16 +51,9 @@ rft_lora_params_t relay_lora_params;
 byte payload[255];
 uint32_t payload_len;
 
-#define SW_VCTL1_PIN PB8
-#define SW_VCTL2_PIN PC13
-
-#define USR_LED_PIN PA9
-
-
 bool ackReceived = false;
 String inputBuffer = "";
-
-
+uint16_t frame_Problem = 0;  // Not paquet received
 
 char hexPayload[50];  // Every byte = 2 caracters hex + '\0'
 uint16_t framecounter_uplink;
@@ -59,6 +62,9 @@ typedef enum {
   RF_SW_MODE_TX = 0,
   RF_SW_MODE_RX
 } rf_sw_mode_t;
+
+
+/* ============================== MAIN ============================== */
 
 void setup(void) {
   pinMode(USR_LED_PIN, OUTPUT);
@@ -70,16 +76,20 @@ void setup(void) {
 
   LowPower.begin();
 
-
   echostar_init();
-
-
 
 #if defined(HAL_UART_MODULE_ENABLED)
   Serial1.begin(115200);
   while (!Serial && (millis() < 3000)) {
   }
 #endif
+
+  WATCHDOG.init();
+  if (WATCHDOG.isResetByWatchdog()) {
+    LOG_D_LN("[WARNING] main::setup() | The reset was caused by WATCHDOG timeout");
+  } else {
+    LOG_D_LN("[INFO] main::setup() | The reset was caused by External Reset");
+  }
 
   // Inititialize the LoRa Module SX126x
   status = sx126x.init(RFT_REGION_EU863_870);
@@ -106,16 +116,15 @@ void setup(void) {
   relay_lora_params.relay_max_rx_packet_length = 120;
 
   blink_led(3);
-
+  delay(100);
 
   // AT JOIN command in order to be connected to the satellite
-  //Serial2.write("AT+REGION=MSS-S\r\n");
-  delay(100);
-  Serial2.write("AT+JOIN\r\n");
-  framecounter_uplink = 0;
-
+  ECHOSTAR_SERIAL.println("AT+JOIN\r\n");
+  framecounter_uplink = 1;
   delay(2000);
 }
+
+/* ============================== LOOP ============================== */
 
 void loop(void) {
   blink_led(1);
@@ -128,9 +137,9 @@ void loop(void) {
 #endif
   {
     case RFT_STATUS_OK:
-      if (payload_len > 0) {
-        // TODO: Filter packet and verify packet integrity
+      frame_Problem += 1;  //Increment after receiving packet
 
+      if (payload_len > 0) {
         LOG_D("[Relay] OK: Received ");
         LOG_D(payload_len);
         LOG_D(" bytes from Device Address: 0x");
@@ -143,19 +152,14 @@ void loop(void) {
         }
         LOG_D_LN();
 
-
         memset(hexPayload, 0, 50);
-        for (int i = 0; i < 19; i++) {
-          sprintf(&hexPayload[2 * i], "%02X", payload[i]);  // Convert every byte to hex
+        for (int i = 0; i < 19; i++) {  // Convert every byte to hex
+          sprintf(&hexPayload[2 * i], "%02X", payload[i]);
         }
 
         LOG_D("HexPayload : ");
         LOG_D(hexPayload);
         LOG_D_LN();
-
-
-
-
 
         char packet[255];
         int packet_len = 0;
@@ -178,42 +182,52 @@ void loop(void) {
 
         char hexFrameCounter[10];
         memset(hexFrameCounter, 0, 10);
-
         snprintf(hexFrameCounter, sizeof(hexFrameCounter), "%04X", framecounter_uplink);
+
         // To save EchoStar FrameCounter in packet
         packet[packet_len++] = hexFrameCounter[0];
         packet[packet_len++] = hexFrameCounter[1];
         packet[packet_len++] = hexFrameCounter[2];
         packet[packet_len++] = hexFrameCounter[3];
 
+        char hexFrameProblem[10];  //This helps to know how many packets are received from the sensor
+        memset(hexFrameProblem, 0, 10);
+        snprintf(hexFrameProblem, sizeof(hexFrameProblem), "%04X", frame_Problem);
+
+        // To save EchoStar Frame Problem in packet
+        packet[packet_len++] = hexFrameProblem[0];
+        packet[packet_len++] = hexFrameProblem[1];
+        packet[packet_len++] = hexFrameProblem[2];
+        packet[packet_len++] = hexFrameProblem[3];
+
         LOG_D("To be sent : ");
         LOG_D(packet);
         LOG_D_LN();
 
-
-
         char command_packet[150];
         memset(command_packet, 0, 150);
-
 
         sprintf(command_packet, "AT+SEND=1,0,8,1,%s\r\n", packet);
         LOG_D_LN("To see what is sent ");
         LOG_D_LN(command_packet);
 
+        while (ECHOSTAR_SERIAL.available()) ECHOSTAR_SERIAL.read();  //Empty the Buffer
+        delay(100);
 
         // Sending packet with AT + SEND command to the satellite
-        Serial2.println(command_packet);
+        ECHOSTAR_SERIAL.println(command_packet);
         LOG_D("This is the packet which is sent : ");
         LOG_D_LN(command_packet);
 
-
         waitForAck();  //Checking the message has been received or not
-        if (ackReceived == 0) {// If not received, we send again
-          Serial2.println(command_packet);
+
+        for (int i = 0; i < 2 && ackReceived == false; i++) {
+          LOG_D_LN("New attempt");
+          while (ECHOSTAR_SERIAL.available()) ECHOSTAR_SERIAL.read();  // Empty again
+          delay(1000);
+          ECHOSTAR_SERIAL.println(command_packet);
+          waitForAck();
         }
-
-
-
 
         LOG_D("    Received RSSI: ");
         LOG_D_LN(relay_lora_params.rssi);
@@ -221,10 +235,6 @@ void loop(void) {
         LOG_D_LN(relay_lora_params.snr);
         LOG_D("    Received Signal RSSI: ");
         LOG_D_LN(relay_lora_params.signal_rssi);
-
-
-
-        framecounter_uplink += 1;
       } else {
         LOG_D_LN("[Relay] ERROR: Unknown ERROR!");
       }
@@ -238,13 +248,18 @@ void loop(void) {
     default:
       break;
   }
+
+
+  // Reload WATCHDOG
+  LOG_D_LN("[INFO] main::loop() | Reloading Watchdog");
+  WATCHDOG.reload();
 }
 
 uint32_t parse_dev_id(byte *payload, uint8_t len) {
   if (payload == NULL)
     return 0;
   if (len < 11)
-    return 0;  // ToDo: Verify the minimum size of a LoRaWAN Packet
+    return 0;
 
   return ((payload[1]) | (payload[2] << 8) | (payload[3] << 16) | (payload[4] << 24));
 }
@@ -267,6 +282,8 @@ void sw_ctrl_set_mode_rx(void) {
   sw_ctrl_set_mode(RF_SW_MODE_RX);
 }
 
+/* ============================== LOW POWER WITH SLEEP ============================== */
+
 #if defined(USE_LOW_POWER_FEATURE_WITH_SLEEP)
 void board_sleep(void) {
   delay(5);
@@ -281,6 +298,9 @@ void board_sleep(void) {
 }
 #endif
 
+
+/* ============================== BLINK LED ============================== */
+
 void blink_led(uint8_t num_of_blink) {
   while (num_of_blink > 0) {
     num_of_blink--;
@@ -293,38 +313,62 @@ void blink_led(uint8_t num_of_blink) {
 }
 
 
+/* ============================== ECHOSTAR INITIALISATION ============================== */
+
 void echostar_init(void) {
-  Serial2.begin(115200);
-  //Serial2.write("AT+TXPMSS=27\r\n");
+  ECHOSTAR_SERIAL.begin(115200);
+  ECHOSTAR_SERIAL.println("AT+TXPMSS=27\r\n");
 }
 
+
+/* ============================== SEND STATUS PACKET ============================== */
 
 void send_status_packet(void) {
   // TODO: Compose an actual status packet! It should included data like: Battery voltage, temperature, humidity, counters, etc.
-  Serial2.println("AT+SEND=1,0,9,1,THIS\r\n");
+  ECHOSTAR_SERIAL.println("AT+SEND=1,0,9,1,THIS\r\n");
 }
 
 
-
+/* ============================== ACKNOWLEDGMENT ============================== */
 
 void waitForAck() {
   unsigned long startTime = millis();
   inputBuffer = "";
+  ackReceived = false;
 
-  while (millis() - startTime < 10000) {  // Timeout de 10 secondes
-    while (Serial2.available()) {
-      char c = Serial2.read();
+  while (millis() - startTime < 15000) {  // 15s timeout
+    while (ECHOSTAR_SERIAL.available()) {
+      char c = ECHOSTAR_SERIAL.read();
       inputBuffer += c;
-    }
 
-    if (inputBuffer.indexOf("SENT: 1") != -1) {
-      ackReceived = true;
-      LOG_D_LN("=> ACK reçu : Message reçu !");
-      return;
-    } else if (inputBuffer.indexOf("NOT_SENT: 1") != -1) {
-      ackReceived = false;
-      LOG_D_LN("=> ACK NON reçu : Message NON reçu !");
-      return;
+      delay(1);
+
+      // Line by line checking
+      if (c == '\n') {
+        LOG_D_LN(inputBuffer);
+        inputBuffer.trim();
+
+        // Check if the line is the success
+        if (inputBuffer.indexOf("SENT:1") != -1 && inputBuffer.indexOf("NOT_SENT:1") == -1) {
+          ackReceived = true;
+          LOG_D_LN("ACK reçu : Message reçu !");
+          framecounter_uplink += 1;
+          return;
+        }
+
+        // Vérifie si la ligne indique un échec
+        if (inputBuffer.indexOf("NOT_SENT:1") != -1 || inputBuffer.indexOf("ERROR") != -1) {
+          LOG_D_LN("ACK NON reçu : Message NON reçu !");
+          frame_Problem += 1;  // Increment if not send
+          return;
+        }
+
+        inputBuffer = "";  // Reinitialize for the next line
+      }
     }
   }
+
+  LOG_D_LN("Timeout sans ACK clair");
 }
+
+/* ============================== END ============================== */

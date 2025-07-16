@@ -4,13 +4,14 @@
 /**
  * Uncomment this define to force the terminal using Sleep mode for low power consumption.
  */
-#define USING_SLEEP_MODE
+//#define USING_SLEEP_MODE
 
 /**
  * Uncomment this define to enable LOG functions to show on the USB Serial console.
- * Note: If USING_LOG_USB_SERIAL & USING_SLEEP_MODE are available at the same time, USB Serial Console may be malfunctioned after the first MCU sleep.
+ * Note: If HAL_UART_MODULE_ENABLED & USING_SLEEP_MODE are available at the same time, USB Serial Console may be malfunctioned after the first MCU sleep.
  */
-// #define USING_LOG_USB_SERIAL
+ #define HAL_UART_MODULE_ENABLED
+
 
 /**
  * Uncomment this define to enable LOG functions to write to the SDCard.
@@ -34,7 +35,7 @@
  * Unit: Seconds
  * Max value: 32
  */
-#define WATCHDOG_TIMEOUT_S 30
+#define WATCHDOG_TIMEOUT_S 60
 
 /*************************************************************/
 
