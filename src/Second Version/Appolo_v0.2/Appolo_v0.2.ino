@@ -137,6 +137,7 @@ void loop(void) {
 #endif
   {
     case RFT_STATUS_OK:
+      WATCHDOG.reload();
       frame_Problem += 1;  //Increment after receiving packet
 
       if (payload_len > 0) {
@@ -288,7 +289,9 @@ void sw_ctrl_set_mode_rx(void) {
 void board_sleep(void) {
   delay(5);
 
+  WATCHDOG.reload();
   LowPower.sleep();
+  WATCHDOG.reload();
 
   delay(5);
 
@@ -337,7 +340,11 @@ void waitForAck() {
   ackReceived = false;
 
   while (millis() - startTime < 15000) {  // 15s timeout
+    WATCHDOG.reload();
+
     while (ECHOSTAR_SERIAL.available()) {
+      WATCHDOG.reload();
+
       char c = ECHOSTAR_SERIAL.read();
       inputBuffer += c;
 
